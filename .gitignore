@@ -149,3 +149,4 @@ data/
 models/
 cache/
 .agents/
+outputs/
