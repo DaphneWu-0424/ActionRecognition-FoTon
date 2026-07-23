@@ -150,3 +150,4 @@ models/
 cache/
 .agents/
 outputs/
+inputs/
