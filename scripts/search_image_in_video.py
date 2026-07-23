@@ -7,6 +7,7 @@ import math
 import os
 import shutil
 import subprocess
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -286,6 +287,8 @@ def encode_sampled_video_frames(
     video_path: Path,
     encoder: OpenClipEncoder,
     sample_fps: float,
+    on_batch_progress: Callable[[float], None] | None = None,
+    cancel_check: Callable[[], None] | None = None,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     cap = cv2.VideoCapture(str(video_path))
 
@@ -385,6 +388,12 @@ def encode_sampled_video_frames(
                         all_times=all_times,
                         all_features=all_features,
                     )
+                    if cancel_check:
+                        cancel_check()
+                    if on_batch_progress and estimated_duration > 0:
+                        on_batch_progress(
+                            min(1.0, timestamp / estimated_duration)
+                        )
 
             frame_index += 1
 
@@ -398,6 +407,10 @@ def encode_sampled_video_frames(
         all_times=all_times,
         all_features=all_features,
     )
+    if cancel_check:
+        cancel_check()
+    if on_batch_progress:
+        on_batch_progress(1.0)
 
     if not all_features:
         raise RuntimeError(
